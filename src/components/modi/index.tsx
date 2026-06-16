@@ -434,7 +434,6 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
             <ModiButton variant="primary" full onClick={onStart} className="text-lg">
               바로 시작하기
             </ModiButton>
-            <span className="text-xs font-medium text-muted-warm">가입 없이 · 30초면 시작</span>
           </div>
         </section>
 
@@ -565,7 +564,6 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
           <ModiButton variant="primary" full onClick={onStart} className="text-lg">
             바로 시작하기
           </ModiButton>
-          <span className="text-xs font-medium text-muted-warm">가입 없이 · 30초면 시작</span>
         </section>
 
         <footer className="flex items-center justify-center gap-2 px-6 py-8">
