@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { Button } from "./ui/button";
+import { Mascot } from "./brand";
 
 interface ResultCelebrationProps {
   winnerName: string;
@@ -45,6 +46,9 @@ export function ResultCelebration({
           mounted ? "scale-100 opacity-100" : "scale-90 opacity-0",
         ].join(" ")}
       >
+        <div className="mb-2 flex justify-center">
+          <Mascot size={72} />
+        </div>
         <p className="mb-2 text-2xl font-bold text-espresso">🎉 결정됐어요!</p>
 
         <div className="my-6">

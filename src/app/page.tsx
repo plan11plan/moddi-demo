@@ -1,14 +1,26 @@
 import Link from "next/link";
+import { BrandMark, Mascot } from "@/components/brand";
 
 export default function Landing() {
   return (
     <main className="app-shell pb-16">
+      {/* 상단 헤더 */}
+      <header className="flex items-center justify-between px-6 pt-6">
+        <BrandMark className="text-xl" />
+        <Link
+          href="/create"
+          className="rounded-full bg-cream-soft px-4 py-1.5 text-sm font-semibold text-espresso"
+        >
+          시작하기
+        </Link>
+      </header>
+
       {/* Hero */}
-      <section className="flex flex-col items-center gap-5 px-6 pt-16 text-center">
+      <section className="flex flex-col items-center gap-5 px-6 pt-10 text-center">
         <span className="rounded-full bg-cream-soft px-3 py-1 text-xs font-semibold text-terracotta">
           다같이 정하는 점심
         </span>
-        <h1 className="text-3xl font-extrabold leading-snug text-espresso">
+        <h1 className="text-[2rem] font-extrabold leading-snug text-espresso">
           점심 정하다
           <br />
           시간 다 가던 그 고민,
@@ -20,9 +32,12 @@ export default function Landing() {
           <br />
           링크로 들어와 다 같이 실시간 투표 🍜
         </p>
+        <div className="my-2 flex h-44 w-44 items-center justify-center rounded-full bg-cream-soft shadow-soft">
+          <Mascot size={120} />
+        </div>
         <Link
           href="/create"
-          className="mt-2 w-full rounded-full bg-terracotta px-6 py-4 text-center text-lg font-bold text-cream shadow-pop active:scale-[0.98]"
+          className="w-full rounded-full bg-terracotta px-6 py-4 text-center text-lg font-bold text-cream shadow-pop active:scale-[0.98]"
         >
           바로 시작하기
         </Link>

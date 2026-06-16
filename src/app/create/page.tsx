@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api, ApiError } from "@/lib/api-client";
 import { writeIdentity } from "@/hooks/use-identity";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand";
 
 const BUDGETS = ["1만원 이하", "1만원대", "2만원대"];
 const TIMERS = [1, 3, 5];
@@ -39,7 +41,10 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="app-shell flex flex-col gap-6 px-6 py-10">
+    <main className="app-shell flex flex-col gap-6 px-6 py-8">
+      <Link href="/" className="w-fit">
+        <BrandMark className="text-lg" />
+      </Link>
       <header>
         <h1 className="text-2xl font-bold text-espresso">모임 만들기</h1>
         <p className="mt-1 text-sm text-muted">조건만 넣으면 후보는 자동으로 떠요.</p>

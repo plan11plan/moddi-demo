@@ -12,6 +12,7 @@ import { NicknameGate } from "@/components/nickname-gate";
 import { TimerBadge } from "@/components/timer-badge";
 import { ParticipantCount } from "@/components/participant-count";
 import { ResultCelebration } from "@/components/result-celebration";
+import { Mascot } from "@/components/brand";
 
 export default function RoomPage() {
   const roomId = useParams<{ id: string }>().id;
@@ -105,8 +106,9 @@ export default function RoomPage() {
       {/* 본문 */}
       <div className="flex-1 px-4 py-4">
         {!voting && (
-          <div className="mb-4 rounded-card bg-cream-soft p-4 text-center">
-            <p className="font-semibold text-espresso">
+          <div className="mb-4 flex flex-col items-center rounded-card bg-cream-soft p-5 text-center">
+            <Mascot size={64} />
+            <p className="mt-2 font-semibold text-espresso">
               {isHost ? "준비됐으면 투표를 시작하세요 🙌" : "방장이 곧 시작해요 🙌"}
             </p>
             <p className="mt-1 text-sm text-muted">
