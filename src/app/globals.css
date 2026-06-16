@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* 모디 디자인 토큰 — 웜 톤(에스프레소·크림·테라코타). spec/architecture.md */
+@theme {
+  --color-espresso: #2a2422;
+  --color-espresso-soft: #3a322e;
+  --color-cream: #f5efe6;
+  --color-cream-soft: #fbf7f0;
+  --color-terracotta: #e0673c;
+  --color-terracotta-dark: #c5552e;
+  --color-ink: #2a2422;
+  --color-muted: #8b8079;
+  --color-line: #e6ddd1;
+
+  --font-sans: "Pretendard", ui-sans-serif, system-ui, -apple-system,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  --radius-card: 1rem;
+  --shadow-soft: 0 8px 24px rgba(42, 36, 34, 0.12);
+  --shadow-pop: 0 16px 40px rgba(42, 36, 34, 0.22);
+}
+
+html,
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 모바일 우선: 본문은 폰 폭에 맞춘 중앙 컬럼 */
+.app-shell {
+  max-width: 30rem;
+  margin: 0 auto;
+  min-height: 100dvh;
+}
