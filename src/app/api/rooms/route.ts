@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { container } from "@/lib/container";
+import { getContainer } from "@/lib/container";
 import { createRoom } from "@/core/application/create-room";
 import { fail, readJson } from "../_lib";
 
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const b = await readJson(req);
     const timerMinutes = Number(b.timerMinutes);
-    const result = await createRoom(container, {
+    const result = await createRoom(getContainer(), {
       title: String(b.title ?? "점심 모임"),
       location: String(b.location ?? "강남역"),
       headcount: Number(b.headcount) || 4,

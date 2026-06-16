@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { container } from "@/lib/container";
+import { getContainer } from "@/lib/container";
 import { addCandidate } from "@/core/application/add-candidate";
 import { fail, readJson, type RouteCtx } from "../../../_lib";
 
@@ -9,7 +9,7 @@ export async function POST(req: Request, ctx: RouteCtx) {
   try {
     const { id } = await ctx.params;
     const b = await readJson(req);
-    const result = await addCandidate(container, id, {
+    const result = await addCandidate(getContainer(), id, {
       name: String(b.name ?? ""),
       description: b.description ? String(b.description) : undefined,
     });

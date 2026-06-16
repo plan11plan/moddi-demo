@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { container } from "@/lib/container";
+import { getContainer } from "@/lib/container";
 import { castVote } from "@/core/application/cast-vote";
 import { fail, readJson, type RouteCtx } from "../../../_lib";
 
@@ -10,7 +10,7 @@ export async function POST(req: Request, ctx: RouteCtx) {
     const { id } = await ctx.params;
     const b = await readJson(req);
     const value = b.value === "dislike" ? "dislike" : "like";
-    await castVote(container, id, {
+    await castVote(getContainer(), id, {
       participantId: String(b.participantId ?? ""),
       candidateId: String(b.candidateId ?? ""),
       value,

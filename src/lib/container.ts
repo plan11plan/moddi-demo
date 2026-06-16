@@ -24,6 +24,12 @@ function build(): Container {
   };
 }
 
-// 서버리스 인스턴스/HMR 단위 싱글톤. (InMemory 사용 시 dev 핫리로드에도 상태 유지)
+// 지연 초기화 — 모듈 import 시점이 아니라 첫 요청 때 어댑터를 만든다.
+// (빌드 타임에 Redis env가 없어도 `next build`가 깨지지 않게. env는 런타임에만 필요.)
+// 서버리스 인스턴스/HMR 단위 싱글톤으로 캐시.
 const g = globalThis as unknown as { __moddi?: Container };
-export const container: Container = g.__moddi ?? (g.__moddi = build());
+
+export function getContainer(): Container {
+  if (!g.__moddi) g.__moddi = build();
+  return g.__moddi;
+}
