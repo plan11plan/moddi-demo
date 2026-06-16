@@ -1,36 +1,85 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-/* 모디 디자인 토큰 — 웜 톤(에스프레소·크림·테라코타). spec/architecture.md */
-@theme {
+@theme inline {
+  --font-sans: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, sans-serif;
+
+  /* MODI palette */
   --color-espresso: #2a2422;
   --color-espresso-soft: #3a322e;
   --color-cream: #f5efe6;
   --color-cream-soft: #fbf7f0;
   --color-terracotta: #e0673c;
   --color-terracotta-dark: #c5552e;
-  --color-ink: #2a2422;
-  --color-muted: #8b8079;
+  --color-muted-warm: #8b8079;
   --color-line: #e6ddd1;
 
-  --font-sans: "Pretendard", ui-sans-serif, system-ui, -apple-system,
-    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  /* Semantic mapping */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  --radius-card: 1rem;
-  --shadow-soft: 0 8px 24px rgba(42, 36, 34, 0.12);
-  --shadow-pop: 0 16px 40px rgba(42, 36, 34, 0.22);
+  --shadow-soft: 0 8px 24px -8px rgba(42, 36, 34, 0.16);
+  --shadow-pop: 0 14px 40px -12px rgba(42, 36, 34, 0.28);
 }
 
-html,
-body {
-  background: var(--color-cream);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+:root {
+  color-scheme: light;
+  --background: #f5efe6;
+  --foreground: #2a2422;
+  --card: #fbf7f0;
+  --card-foreground: #2a2422;
+  --primary: #e0673c;
+  --primary-foreground: #f5efe6;
+  --secondary: #fbf7f0;
+  --secondary-foreground: #2a2422;
+  --muted: #efe7da;
+  --muted-foreground: #8b8079;
+  --accent: #efe7da;
+  --accent-foreground: #2a2422;
+  --destructive: #c5552e;
+  --border: #e6ddd1;
+  --input: #e6ddd1;
+  --ring: #e0673c;
+  --radius: 1rem;
 }
 
-/* 모바일 우선: 본문은 폰 폭에 맞춘 중앙 컬럼 */
-.app-shell {
-  max-width: 30rem;
-  margin: 0 auto;
-  min-height: 100dvh;
+@keyframes modi-confetti-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift, 0), 110vh, 0) rotate(720deg);
+    opacity: 0.85;
+  }
+}
+
+.animate-confetti {
+  animation: modi-confetti-fall linear forwards;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

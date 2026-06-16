@@ -6,13 +6,15 @@ import type { VoteValue } from "@/core/domain/types";
 import { api } from "@/lib/api-client";
 import { useIdentity } from "@/hooks/use-identity";
 import { useRoomPoll } from "@/hooks/use-room-poll";
-import { Button } from "@/components/ui/button";
-import { CandidateCard } from "@/components/candidate-card";
-import { NicknameGate } from "@/components/nickname-gate";
-import { TimerBadge } from "@/components/timer-badge";
-import { ParticipantCount } from "@/components/participant-count";
-import { ResultCelebration } from "@/components/result-celebration";
-import { Mascot } from "@/components/brand";
+import {
+  LobbyScreen,
+  VoteScreen,
+  ResultScreen,
+  ScreenFrame,
+  ModiButton,
+  MascotSlot,
+  type Candidate as ModiCandidate,
+} from "@/components/modi";
 
 export default function RoomPage() {
   const roomId = useParams<{ id: string }>().id;
@@ -21,30 +23,52 @@ export default function RoomPage() {
   const { view, error, refresh } = useRoomPoll(roomId);
 
   const [joining, setJoining] = useState(false);
+  const [nickname, setNickname] = useState("");
   const [pending, setPending] = useState<Record<string, VoteValue | null>>({});
-  const [busy, setBusy] = useState(false);
 
   if (error && !view) return <Centered>방을 찾을 수 없어요 😢</Centered>;
   if (!loaded || !view) return <Centered>불러오는 중…</Centered>;
 
-  // 입장 전(participantId 없음) → 닉네임 게이트. 방장도 투표자라 동일.
+  // ── 입장 전: 닉네임 게이트 (방장도 투표자라 동일) ───────────────
   if (!identity.participantId) {
+    const join = async () => {
+      const n = nickname.trim();
+      if (!n || joining) return;
+      setJoining(true);
+      try {
+        const { participantId } = await api.join(roomId, n);
+        update({ participantId, nickname: n });
+        await refresh();
+      } finally {
+        setJoining(false);
+      }
+    };
     return (
-      <NicknameGate
-        title={view.title}
-        candidateCount={view.candidates.length}
-        submitting={joining}
-        onSubmit={async (nickname) => {
-          setJoining(true);
-          try {
-            const { participantId } = await api.join(roomId, nickname);
-            update({ participantId, nickname });
-            await refresh();
-          } finally {
-            setJoining(false);
-          }
-        }}
-      />
+      <ScreenFrame className="items-center justify-center gap-6 text-center">
+        <MascotSlot size="md" />
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-semibold text-muted-warm">초대받은 모임</p>
+          <h1 className="text-2xl font-extrabold text-espresso">{view.title} 🍜</h1>
+          <p className="mt-1 text-sm text-muted-warm">
+            후보 {view.candidates.length}개가 준비됐어요. 닉네임만 정하면 바로 입장!
+          </p>
+        </div>
+        <div className="flex w-full flex-col gap-3">
+          <input
+            autoFocus
+            value={nickname}
+            maxLength={12}
+            onChange={(e) => setNickname(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && join()}
+            placeholder="닉네임 (예: 진수)"
+            className="h-14 w-full rounded-2xl border border-line bg-card px-5 text-[15px] font-semibold text-espresso placeholder:font-medium placeholder:text-muted-warm focus:border-terracotta focus:outline-none focus:ring-4 focus:ring-terracotta/12"
+          />
+          <ModiButton variant="primary" full disabled={!nickname.trim() || joining} onClick={join}>
+            {joining ? "입장 중…" : "입장하기"}
+          </ModiButton>
+          <span className="text-xs font-medium text-muted-warm">가입·로그인 없이 들어가요</span>
+        </div>
+      </ScreenFrame>
     );
   }
 
@@ -53,13 +77,16 @@ export default function RoomPage() {
     view.votes.find((v) => v.participantId === pid && v.candidateId === cid)?.value ?? null;
   const myValue = (cid: string): VoteValue | null =>
     cid in pending ? pending[cid] : serverMyValue(cid);
-  const tallyOf = (cid: string) =>
-    view.tallies.find((t) => t.candidateId === cid) ?? {
-      candidateId: cid,
-      likes: 0,
-      dislikes: 0,
-      score: 0,
-    };
+  const tallyOf = (cid: string) => {
+    const t = view.tallies.find((x) => x.candidateId === cid);
+    return { likes: t?.likes ?? 0, dislikes: t?.dislikes ?? 0 };
+  };
+  const toModi = (c: (typeof view.candidates)[number]): ModiCandidate => ({
+    name: c.name,
+    description: c.description,
+    tags: c.tags,
+    addedBy: c.addedBy === "ai" ? "모디" : "",
+  });
 
   async function vote(cid: string, clicked: VoteValue) {
     const optimistic = myValue(cid) === clicked ? null : clicked;
@@ -77,11 +104,27 @@ export default function RoomPage() {
     }
   }
 
-  // 결과
+  async function addCandidate() {
+    const name = window.prompt("추가할 식당 이름을 적어주세요");
+    if (!name?.trim()) return;
+    await api.addCandidate(roomId, { name: name.trim() });
+    await refresh();
+  }
+
+  async function shareLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      window.alert("초대 링크를 복사했어요! 친구에게 붙여넣어 주세요.");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // ── 결과 ────────────────────────────────────────────────
   if (view.status === "decided") {
     const winner = view.candidates.find((c) => c.id === view.decidedCandidateId);
     return (
-      <ResultCelebration
+      <ResultScreen
         winnerName={winner?.name ?? "결정!"}
         winnerDescription={winner?.description ?? ""}
         likes={winner ? tallyOf(winner.id).likes : 0}
@@ -90,176 +133,55 @@ export default function RoomPage() {
     );
   }
 
-  const voting = view.status === "voting";
-
-  return (
-    <main className="app-shell flex min-h-dvh flex-col">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-cream/90 px-4 py-3 backdrop-blur">
-        <h1 className="truncate font-bold text-espresso">{view.title} 🍜</h1>
-        <div className="flex items-center gap-2">
-          <ParticipantCount count={view.participants.length} />
-          <TimerBadge deadlineAt={view.deadlineAt} />
-        </div>
-      </header>
-
-      {/* 본문 */}
-      <div className="flex-1 px-4 py-4">
-        {!voting && (
-          <div className="mb-4 flex flex-col items-center rounded-card bg-cream-soft p-5 text-center">
-            <Mascot size={64} />
-            <p className="mt-2 font-semibold text-espresso">
-              {isHost ? "준비됐으면 투표를 시작하세요 🙌" : "방장이 곧 시작해요 🙌"}
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              지금 {view.participants.length}명 모이는 중
-            </p>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {view.candidates.map((c) => (
-            <CandidateCard
-              key={c.id}
-              candidate={c}
-              tally={tallyOf(c.id)}
-              myValue={myValue(c.id)}
-              disabled={!voting}
-              onVote={(v) => vote(c.id, v)}
-            />
-          ))}
-        </div>
-
-        <AddCandidate
-          onAdd={async (name) => {
-            await api.addCandidate(roomId, { name });
-            await refresh();
-          }}
-        />
-      </div>
-
-      {/* 푸터 (방장 운영 / 참여자 안내) */}
-      <footer className="sticky bottom-0 border-t border-line bg-cream/90 px-4 py-3 backdrop-blur">
-        {!voting ? (
-          isHost ? (
-            <div className="flex gap-2">
-              <CopyLinkButton />
-              <Button
-                fullWidth
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    await api.start(roomId, identity.hostToken!);
-                    await refresh();
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                투표 시작
-              </Button>
-            </div>
-          ) : (
-            <p className="text-center text-sm text-muted">방장이 시작하면 투표가 열려요</p>
-          )
-        ) : isHost ? (
-          <Button
-            variant="danger"
-            fullWidth
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await api.close(roomId, identity.hostToken!);
-                await refresh();
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            지금 마감하기
-          </Button>
-        ) : (
-          <p className="text-center text-sm text-muted">마음에 드는 곳에 👍 하세요</p>
-        )}
-      </footer>
-    </main>
-  );
-}
-
-function AddCandidate({ onAdd }: { onAdd: (name: string) => Promise<void> }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  if (!open) {
+  // ── 대기 ────────────────────────────────────────────────
+  if (view.status === "waiting") {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-3 w-full rounded-card border border-dashed border-line py-3 text-sm font-medium text-muted"
-      >
-        + 후보 직접 추가
-      </button>
+      <LobbyScreen
+        roomTitle={`${view.title} 🍜`}
+        people={view.participants.map((p) => ({ name: p.nickname }))}
+        candidates={view.candidates.map(toModi)}
+        isHost={isHost}
+        onStart={async () => {
+          await api.start(roomId, identity.hostToken!);
+          await refresh();
+        }}
+        onShare={shareLink}
+        onAddCandidate={addCandidate}
+      />
     );
   }
-  return (
-    <form
-      className="mt-3 flex gap-2"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const n = name.trim();
-        if (!n || busy) return;
-        setBusy(true);
-        try {
-          await onAdd(n);
-          setName("");
-          setOpen(false);
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <input
-        autoFocus
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        maxLength={20}
-        placeholder="식당 이름"
-        className="flex-1 rounded-full border border-line bg-cream-soft px-4 py-2 text-espresso outline-none focus:border-terracotta"
-      />
-      <Button type="submit" disabled={busy}>
-        추가
-      </Button>
-    </form>
-  );
-}
 
-function CopyLinkButton() {
-  const [copied, setCopied] = useState(false);
+  // ── 투표 ────────────────────────────────────────────────
   return (
-    <Button
-      variant="ghost"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(window.location.href);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        } catch {
-          /* ignore */
-        }
-      }}
-    >
-      {copied ? "복사됨!" : "URL 복사"}
-    </Button>
+    <VoteScreen
+      roomTitle={`${view.title} 🍜`}
+      participants={view.participants.length}
+      secondsLeft={Math.max(0, Math.ceil((view.remainingMs ?? 0) / 1000))}
+      canClose={isHost}
+      items={view.candidates.map((c) => ({
+        id: c.id,
+        candidate: toModi(c),
+        tally: tallyOf(c.id),
+        myValue: myValue(c.id),
+      }))}
+      onVote={(id, v) => vote(id, v)}
+      onAddCandidate={addCandidate}
+      onClose={
+        isHost
+          ? async () => {
+              await api.close(roomId, identity.hostToken!);
+              await refresh();
+            }
+          : undefined
+      }
+    />
   );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <main className="app-shell flex items-center justify-center px-6 text-center text-muted">
-      {children}
-    </main>
+    <ScreenFrame className="items-center justify-center text-center">
+      <p className="text-muted-warm">{children}</p>
+    </ScreenFrame>
   );
 }
